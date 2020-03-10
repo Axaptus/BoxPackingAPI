@@ -5,7 +5,6 @@ import fulfillment_api.messages as msg
 from .helper import api_packing_algorithm
 from .packing_algorithm import does_it_fit, packing_algorithm, ItemTuple
 
-from itertools import izip
 from sqlalchemy import or_
 
 
@@ -119,7 +118,7 @@ def shotput_packing_algorithm(session, team, qty_per_item, flat_rate_okay=False,
         dimensions = sorted([item_data['item'].width_cm,
                              item_data['item'].height_cm,
                              item_data['item'].length_cm])
-        min_box_dimensions = [max(a, b) for a, b in izip(dimensions,
+        min_box_dimensions = [max(a, b) for a, b in zip(dimensions,
                                                          min_box_dimensions)]
         unordered_items += ([ItemTuple(item_data['item'], dimensions,
                             item_data['item'].weight_g)] *

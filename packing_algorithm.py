@@ -52,7 +52,6 @@ data path:
 from errors import APIError, BoxError
 
 from collections import namedtuple
-from itertools import izip
 
 
 Packaging = namedtuple('Package', 'box, items_per_box, last_parcel')
@@ -75,7 +74,7 @@ def does_it_fit(item_dims, box_dims):
 
     '''
     return all(box_dim >= item_dim
-               for box_dim, item_dim in izip(box_dims, item_dims))
+               for box_dim, item_dim in zip(box_dims, item_dims))
 
 
 def _something_fits(items, box_dims):
