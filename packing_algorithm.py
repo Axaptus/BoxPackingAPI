@@ -312,7 +312,7 @@ def setup_packages(packed_boxes, zone=None):
         raise BoxError('There are no packed boxes available to return.')
     best_boxes = {}
     # determine best flat rate and best package
-    for box, packed_items in packed_boxes.iteritems():
+    for box, packed_items in packed_boxes.items():
         # is_flat_rate = box.description in usps_shipping.USPS_BOXES
         # key = 'flat_rate' if is_flat_rate else 'package'
         min_boxes = best_boxes.get('num_parcels')
