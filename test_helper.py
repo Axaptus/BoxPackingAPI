@@ -288,7 +288,7 @@ class ApiPackingAlgorithmTest(BaseShotputTestCase):
         for package in result['packages']:
             self.assertLessEqual(package['total_weight'], 300)
 
-            for item_number, quantity in package['packed_products'].iteritems():
+            for item_number, quantity in package['packed_products'].items():
                 packed_counts[item_number] += quantity
 
         self.assertEqual(expected_counts, packed_counts)

@@ -10,7 +10,7 @@ from sqlalchemy import or_
 
 def is_packing_valid(item_quantities, box):
     items = []
-    for item, quantity in item_quantities.iteritems():
+    for item, quantity in item_quantities.items():
         items.append({
             'product_name': item.id,
 
@@ -113,7 +113,7 @@ def shotput_packing_algorithm(session, team, qty_per_item, flat_rate_okay=False,
     max_weight = preferred_max_weight or 31710
     min_box_dimensions = [None, None, None]
 
-    for item_number, item_data in qty_per_item.iteritems():
+    for item_number, item_data in qty_per_item.items():
 
         dimensions = sorted([item_data['item'].width_cm,
                              item_data['item'].height_cm,

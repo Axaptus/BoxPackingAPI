@@ -257,7 +257,7 @@ def api_packing_algorithm(boxes_info, items_info, options):
             selected_box = best_box
             total_weight = package_info.box.weight_g
         items_packed = {}
-        for item, info in parcel.iteritems():
+        for item, info in parcel.items():
             items_packed[item] = info['quantity']
             total_weight += info['quantity'] * info['item'].weight
         package_contents.append({
