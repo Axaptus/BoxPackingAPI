@@ -11,7 +11,6 @@ from .packing_algorithm import (best_fit, does_it_fit,
                                 packing_algorithm, ItemTuple, volume)
 
 from collections import Counter
-from itertools import izip
 import math
 
 
@@ -208,7 +207,7 @@ def api_packing_algorithm(boxes_info, items_info, options):
                                         to_unit='grams')
         items += ([ItemTuple(item['product_name'], dimensions, item_weight)] *
                  item['quantity'])
-        min_box_dimensions = [max(a, b) for a, b in izip(dimensions,
+        min_box_dimensions = [max(a, b) for a, b in zip(dimensions,
                                                          min_box_dimensions)]
     if options is not None:
         max_weight = int(options.get('max_weight', 31710))
