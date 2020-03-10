@@ -2,7 +2,7 @@ from fulfillment_api.authentication.products.simple_item import (
     get_item_dictionary_from_list)
 from fulfillment_api.authentication.shipping_box import ShippingBox
 from fulfillment_api.constants import units
-from fulfillment_api.errors import BoxError
+from .errors import BoxError
 from fulfillment_api.util.unit_conversion import (convert_dimensional_units,
                                                   convert_mass_units)
 
