@@ -1,6 +1,6 @@
 from fulfillment_api.authentication.shipping_box import ShippingBox
 from fulfillment_api.constants import usps_shipping, units
-from fulfillment_api.errors import BoxError
+from .errors import BoxError
 import fulfillment_api.messages as msg
 from .helper import api_packing_algorithm
 from .packing_algorithm import does_it_fit, packing_algorithm, ItemTuple

@@ -49,7 +49,7 @@ data path:
 '''
 
 # from . import usps_shipping
-from errors import APIError, BoxError
+from .errors import APIError, BoxError
 
 from collections import namedtuple
 

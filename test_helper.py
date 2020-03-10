@@ -1,7 +1,7 @@
-from fulfillment_api.box_packing.helper import (space_after_packing,
+from .helper import (space_after_packing,
     how_many_items_fit, pre_pack_boxes,
     api_packing_algorithm)
-from fulfillment_api.errors import BoxError
+from .errors import BoxError
 
 from collections import Counter
 from testing.shotput_tests import BaseShotputTestCase
