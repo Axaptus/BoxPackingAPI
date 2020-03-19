@@ -265,11 +265,11 @@ class BoxSelectionAlgorithmTest(unittest.TestCase):
 class SetupBoxDictionaryTest(unittest.TestCase):
 
     def make_generic_box(self, name, volume=None):
-        TestBox = namedtuple('TestBox', 'name, description, total_cubic_cm')
+        TestBox = namedtuple('TestBox', 'name, description, volume')
         description = 'normal'
         volume = volume if volume is not None else 1000
         return TestBox(name=name, description=description,
-                       total_cubic_cm=volume)
+                       volume=volume)
 
     def test_setup_packages(self):
         item = ItemTuple('Item1', [1, 2, 3], 0)

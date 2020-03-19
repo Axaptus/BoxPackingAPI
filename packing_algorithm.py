@@ -48,7 +48,6 @@ data path:
 [1] - http://www.jstor.org/stable/pdf/223143.pdf, page 257
 '''
 
-# from . import usps_shipping
 from errors import APIError, BoxError
 
 from collections import namedtuple
@@ -308,7 +307,7 @@ def pack_boxes(box_dimensions, items_to_pack):
     return items_packed
 
 
-def setup_packages(packed_boxes, zone=None):
+def setup_packages(packed_boxes):
     if len(packed_boxes) == 0:
         raise BoxError('There are no packed boxes available to return.')
     best_boxes = {}
@@ -334,7 +333,7 @@ def setup_packages(packed_boxes, zone=None):
             }
         elif box_packs_same:
             # check a few comparisons
-            if box.total_cubic_cm < best_boxes['box'].total_cubic_cm:
+            if box.volume < best_boxes['box'].volume:
                 best_boxes['box'] = box
             # else the box is not smaller
         # else the box does not pack better
@@ -395,7 +394,7 @@ def packing_algorithm(unordered_items, useable_boxes, max_weight,
         for items in packed_items:
             # if the weight of the contents of the box are greater than the
             # given max weight
-            while sum(item.weight for item in items) + box.weight_g > max_weight:
+            while sum(item.weight for item in items) + box.weight > max_weight:
                 if len(items) == 1:
                     raise APIError('SKU is too heavy: {}'
                                    .format(items[0].item_number))
@@ -406,7 +405,7 @@ def packing_algorithm(unordered_items, useable_boxes, max_weight,
                 popped_item = items.pop()
 
                 if ((sum(item.weight for item in additional_box) +
-                        float(popped_item.weight) + box.weight_g) > max_weight):
+                        float(popped_item.weight) + box.weight) > max_weight):
                     # if the additional box weight + the last item is more than
                     # the max weight, start a new box
                     additional_boxes.append(additional_box)
@@ -421,24 +420,23 @@ def packing_algorithm(unordered_items, useable_boxes, max_weight,
 
         packed_boxes[box_dict['box']] = packed_items
 
-    box_dictionary = setup_box_dictionary(packed_boxes, zone)
+    package = setup_packages(packed_boxes)
 
     # repack the last parcel into a smaller box
-    if (box_dictionary['package'] is not None and
-            len(box_dictionary['package'].items_per_box) > 1):
-        package = box_dictionary['package']
+    if (package is not None and
+            len(package.items_per_box) > 1):
         # repack the last parcels, see if they should go in a smaller box
         smallest_items_to_pack = package.items_per_box[-1]
         for box_dict in useable_boxes:
             # using non-flat rate boxes and those already smaller than the
             # currently set box
             smaller_box = box_dict['box']
-            if (smaller_box.total_cubic_cm < package.box.total_cubic_cm):
+            if (smaller_box.volume < package.box.volume):
                 packed_items = pack_boxes(box_dict['dimensions'],
                                          smallest_items_to_pack)
                 if len(packed_items) == 1:
-                    box_dictionary['package'] = package._replace(
+                    package = package._replace(
                         last_parcel=smaller_box)
                     break
 
-    return box_dictionary
+    return package

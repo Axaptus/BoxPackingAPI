@@ -1,7 +1,7 @@
 from fulfillment_api.api_verify import verify_box_api
 from fulfillment_api.constants import permissions
 from .errors import APIError, BoxError
-from fulfillment_api import messages as msg
+from .messages as msg
 
 from ..authentication.login_required import (login_required,
                                              shotput_permission_required)
