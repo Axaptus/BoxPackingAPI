@@ -49,9 +49,10 @@ data path:
 '''
 
 # from . import usps_shipping
-from .errors import APIError, BoxError
+from errors import APIError, BoxError
 
 from collections import namedtuple
+import functools
 
 
 Packaging = namedtuple('Package', 'box, items_per_box, last_parcel')
@@ -136,7 +137,7 @@ def volume(dimensions):
     Returns:
         int: volume
     '''
-    return reduce(lambda x, y: x * y, dimensions)
+    return functools.reduce(lambda x, y: x * y, dimensions)
 
 
 def best_fit(item_dims, box_dims):
