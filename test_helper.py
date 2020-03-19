@@ -1,13 +1,14 @@
-from .helper import (space_after_packing,
+from helper import (space_after_packing,
     how_many_items_fit, pre_pack_boxes,
     api_packing_algorithm)
-from .errors import BoxError
+from errors import BoxError
 
 from collections import Counter
-from testing.shotput_tests import BaseShotputTestCase
+# from testing.shotput_tests import unittest.TestCase
+import unittest
 
 
-class HowManyItemsFitTest(BaseShotputTestCase):
+class HowManyItemsFitTest(unittest.TestCase):
     def test_exact_fit(self):
         box_info = {
             'height': 4,
@@ -77,7 +78,7 @@ class HowManyItemsFitTest(BaseShotputTestCase):
         }, response)
 
 
-class SpaceAfterPackingTest(BaseShotputTestCase):
+class SpaceAfterPackingTest(unittest.TestCase):
     def test_exact_fit(self):
         box_info = {
             'height': 4,
@@ -116,7 +117,7 @@ class SpaceAfterPackingTest(BaseShotputTestCase):
         }, response)
 
 
-class PrePackBoxesTest(BaseShotputTestCase):
+class PrePackBoxesTest(unittest.TestCase):
 
     def test_pre_pack_boxes_simple(self):
         '''
@@ -226,7 +227,7 @@ CUBE_SKU = {
 }
 
 
-class ApiPackingAlgorithmTest(BaseShotputTestCase):
+class ApiPackingAlgorithmTest(unittest.TestCase):
 
     def setUp(self):
         super(ApiPackingAlgorithmTest, self).setUp()

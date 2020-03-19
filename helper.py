@@ -1,12 +1,8 @@
-from fulfillment_api.authentication.products.simple_item import (
-    get_item_dictionary_from_list)
-from fulfillment_api.authentication.shipping_box import ShippingBox
-from fulfillment_api.constants import units
-from .errors import BoxError
-from fulfillment_api.util.unit_conversion import (convert_dimensional_units,
-                                                  convert_mass_units)
+from errors import BoxError
 
-from .packing_algorithm import (best_fit, does_it_fit,
+import units
+from boxes import Box, SimpleItem
+from packing_algorithm import (best_fit, does_it_fit,
                                 insert_items_into_dimensions, pack_boxes,
                                 packing_algorithm, ItemTuple, volume)
 
@@ -131,6 +127,30 @@ def dim_to_cm(dim, dimension_units):
     return convert_dimensional_units(float(dim), dimension_units,
                                      to_unit=units.CENTIMETERS)
 
+def get_item_dictionary_from_list(items):
+    '''
+    Takes a list of SimpleSkus and translates into dictionary format
+
+    Args:
+        items (List[SimpleItem]) OR (List[SkuTuple])
+    Returns
+        Dict[str, Dict[{
+            'item': SimpleItem,
+            'quantity': int
+        }]]
+
+        A dictionary with item numbers as keys and a dict with 'item' and
+        'quantity', containing the related SimpleItem and the quantity originally
+        in `items`.
+    '''
+    simple_items = {}
+    qty_per_item = Counter()
+    for item in items:
+        qty_per_item[item.item_number] += 1
+        if item.item_number not in simple_items:
+            simple_items[item.item_number] = item
+    return {item_number: {'item': item, 'quantity': qty_per_item[item_number]}
+            for item_number, item in simple_items.items()}
 
 def weight_of_box_contents(box_contents):
     '''
@@ -139,7 +159,7 @@ def weight_of_box_contents(box_contents):
     Args:
         box_contents (List[item_number])
         item_info (Dict[Dict[{
-                'weight_g': int/float
+                'weight': int/float
             }]])
     Returns:
         float
@@ -198,35 +218,31 @@ def api_packing_algorithm(boxes_info, items_info, options):
     if len(set(box['name'] for box in boxes_info)) < len(boxes_info):
         # non-unique names for the boxes have been used.
         raise BoxError('Please use unique boxes with unique names')
-    min_box_dimensions = [None, None, None]
+    min_box_dimensions = [0, 0, 0]
     for item in items_info:
         dimensions = sorted([float(item['width']), float(item['height']),
                              float(item['length'])])
         weight_units = item['weight_units']
-        item_weight = convert_mass_units(float(item['weight']), weight_units,
-                                        to_unit='grams')
+        item_weight = float(item['weight'])
         items += ([ItemTuple(item['product_name'], dimensions, item_weight)] *
                  item['quantity'])
         min_box_dimensions = [max(a, b) for a, b in zip(dimensions,
-                                                         min_box_dimensions)]
+                                                        min_box_dimensions)]
     if options is not None:
         max_weight = int(options.get('max_weight', 31710))
     else:
         max_weight = 31710
     for box in boxes_info:
         dimension_units = box.get('dimension_units', units.CENTIMETERS)
-        dimensions = sorted([dim_to_cm(box['width'], dimension_units),
-                             dim_to_cm(box['length'], dimension_units),
-                             dim_to_cm(box['height'], dimension_units)])
+        dimensions = sorted([box['width'],
+                             box['length'],
+                             box['height']])
         if does_it_fit(min_box_dimensions, dimensions):
-            box_weight_g = convert_mass_units(float(box['weight']),
-                                              box['weight_units'],
-                                              to_unit='grams')
+            box_weight = float(box['weight'])
             boxes.append({
-                'box': ShippingBox(box['name'], box['name'],
-                                   box.get('description', ''), None,
-                                   box_weight_g, dimensions[0], dimensions[1],
-                                   dimensions[2], 0),
+                'box': Box(name=box['name'],
+                                   weight=box_weight, length=dimensions[0], width=dimensions[1],
+                                   height=dimensions[2]),
                 'dimensions': dimensions
             })
     if len(boxes) == 0:
@@ -235,10 +251,8 @@ def api_packing_algorithm(boxes_info, items_info, options):
     # sort boxes by volume
     boxes = sorted(boxes, key=lambda box: volume(box['dimensions']))
     # send everything through the packing algorithm
-    box_dictionary = packing_algorithm(items, boxes, max_weight)
-    # only return the package, because these boxes don't have description so
-    # flat_rate boxes won't be a thing - at least for now
-    package_info = box_dictionary['package']
+    package_info = packing_algorithm(items, boxes, max_weight)
+
     package_contents_dict = [get_item_dictionary_from_list(parcel)
                              for parcel in package_info.items_per_box]
     package_contents = []
@@ -252,10 +266,10 @@ def api_packing_algorithm(boxes_info, items_info, options):
     for i, parcel in enumerate(package_contents_dict):
         if i == len(package_contents_dict) - 1 and last_parcel is not None:
             selected_box = last_parcel
-            total_weight = package_info.last_parcel.weight_g
+            total_weight = package_info.last_parcel.weight
         else:
             selected_box = best_box
-            total_weight = package_info.box.weight_g
+            total_weight = package_info.box.weight
         items_packed = {}
         for item, info in parcel.items():
             items_packed[item] = info['quantity']
@@ -306,30 +320,28 @@ def pre_pack_boxes(box_info, items_info, options):
         }]]
     '''
     dimension_units = box_info['dimension_units']
-    box_dims = sorted([dim_to_cm(box_info['width'], dimension_units),
-                       dim_to_cm(box_info['length'], dimension_units),
-                       dim_to_cm(box_info['height'], dimension_units)])
+    box_dims = sorted([box_info['width'],
+                       box_info['length'],
+                       box_info['height']])
     items_to_pack = []
     weight_units = box_info['weight_units']
-    box_weight = convert_mass_units(box_info['weight'], weight_units,
-                                    to_unit='grams')
+    box_weight = box_info['weight']
     total_weight = box_weight
     max_weight = options.get('max_weight', 31710)  # given max weight or 70lbs
     for item in items_info:
         dimension_units = item['dimension_units']
         weight_units = item['weight_units']
-        sorted_dims = sorted([dim_to_cm(item['height'], dimension_units),
-                              dim_to_cm(item['length'], dimension_units),
-                              dim_to_cm(item['width'], dimension_units)])
+        sorted_dims = sorted([item['height'],
+                              item['length'],
+                              item['width']])
         if not does_it_fit(sorted_dims, box_dims):
             raise BoxError('Some of your items are too big for the box you\'ve'
                            ' selected. Please select a bigger box or contact'
                            ' ops@shotput.com.')
-        item['weight_g'] = convert_mass_units(item['weight'], weight_units,
-                                             to_unit='grams')
+        item['weight'] = item['weight']
         items_to_pack += [ItemTuple(item['product_name'], sorted_dims,
-                         int(item['weight_g']))] * int(item['quantity'])
-        total_weight += item['weight_g'] * int(item['quantity'])
+                         int(item['weight']))] * int(item['quantity'])
+        total_weight += item['weight'] * int(item['quantity'])
     items_to_pack = sorted(items_to_pack, key=lambda item: item.dimensions[2],
                           reverse=True)
     box_dims = sorted(box_dims)
