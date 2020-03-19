@@ -1,7 +1,7 @@
 from collections import namedtuple
-from .packing_algorithm import (does_it_fit,
+from packing_algorithm import (does_it_fit,
     best_fit, pack_boxes, ItemTuple, Packaging, setup_packages)
-from .errors import BoxError
+from errors import BoxError
 import unittest
 
 
